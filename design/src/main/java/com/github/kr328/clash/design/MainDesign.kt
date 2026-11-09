@@ -1,6 +1,7 @@
 package com.github.kr328.clash.design
 
 import android.content.Context
+import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -145,14 +146,14 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
     init {
         binding.self = this
 
-        binding.topImport.setOnClickListener { request(Request.OpenProfiles) }
-        binding.topSettings.setOnClickListener { request(Request.OpenSettings) }
-        binding.powerBtn.setOnClickListener { request(Request.ToggleStatus) }
-        binding.flashBtn.setOnClickListener { request(Request.HealthCheck) }
-        binding.nodeCard.setOnClickListener { request(Request.OpenProxy) }
-        binding.modeRow.setOnClickListener { request(Request.OpenProxy) }
-        binding.providersRow.setOnClickListener { request(Request.OpenProviders) }
-        binding.moreRow.setOnClickListener { request(Request.OpenLogs) }
+        binding.topImport.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenProfiles) }
+        binding.topSettings.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenSettings) }
+        binding.powerBtn.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.ToggleStatus) }
+        binding.flashBtn.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.HealthCheck) }
+        binding.nodeCard.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenProxy) }
+        binding.modeRow.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenProxy) }
+        binding.providersRow.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenProviders) }
+        binding.moreRow.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenLogs) }
 
         // Bottom navigation: Home is the current page.
         val nav = binding.navBar
@@ -164,9 +165,9 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
         nav.navHubText.setTextColor(color(R.color.home_text_secondary))
         nav.navSettingsIcon.setColorFilter(color(R.color.home_text_secondary))
         nav.navSettingsText.setTextColor(color(R.color.home_text_secondary))
-        nav.navStats.setOnClickListener { request(Request.OpenStats) }
-        nav.navHub.setOnClickListener { request(Request.OpenHub) }
-        nav.navSettings.setOnClickListener { request(Request.OpenSettings) }
+        nav.navStats.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenStats) }
+        nav.navHub.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenHub) }
+        nav.navSettings.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenSettings) }
 
         binding.durationText.text = "00:00:00"
         binding.uploadText.text = "0 B/s"

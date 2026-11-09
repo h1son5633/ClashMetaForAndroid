@@ -9,6 +9,10 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
+    <!-- The LiquidGlass AAR declares minSdk 24 while the app supports 21;
+         the glass view is only exercised on modern devices in this fork. -->
+    <uses-sdk tools:overrideLibrary="com.example.liquidglass" />
+
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission

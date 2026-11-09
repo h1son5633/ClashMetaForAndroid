@@ -69,6 +69,7 @@ class TrafficStatsDesign(context: Context) : Design<TrafficStatsDesign.Request>(
         binding.self = this
 
         val nav = binding.navBar
+        (nav.root as? com.example.liquidglass.LiquidGlassView)?.enableDynamicBackground = true
         nav.navHomeIcon.setColorFilter(color(R.color.home_text_secondary))
         nav.navHomeText.setTextColor(color(R.color.home_text_secondary))
         nav.navStatsIcon.setColorFilter(color(R.color.home_accent))

@@ -1,6 +1,7 @@
 package com.github.kr328.clash.design
 
 import android.content.Context
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -66,8 +67,8 @@ class HubDesign(context: Context) : Design<HubDesign.Request>(context) {
     init {
         binding.self = this
 
-        binding.tabProxy.setOnClickListener { request(Request.ShowProxy) }
-        binding.tabProfiles.setOnClickListener { request(Request.ShowProfiles) }
+        binding.tabProxy.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.ShowProxy) }
+        binding.tabProfiles.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.ShowProfiles) }
 
         // Bottom navigation: Hub is the current page.
         val nav = binding.navBar
@@ -79,9 +80,9 @@ class HubDesign(context: Context) : Design<HubDesign.Request>(context) {
         nav.navHubText.setTextColor(color(R.color.home_accent))
         nav.navSettingsIcon.setColorFilter(color(R.color.home_text_secondary))
         nav.navSettingsText.setTextColor(color(R.color.home_text_secondary))
-        nav.navHome.setOnClickListener { request(Request.OpenHome) }
-        nav.navStats.setOnClickListener { request(Request.OpenStats) }
-        nav.navSettings.setOnClickListener { request(Request.OpenSettings) }
+        nav.navHome.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenHome) }
+        nav.navStats.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenStats) }
+        nav.navSettings.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenSettings) }
     }
 
     fun request(request: Request) {

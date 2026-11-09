@@ -5,35 +5,12 @@
         <variable
             name="self"
             type="com.github.kr328.clash.design.MainDesign" />
-        <variable
-            name="clashRunning"
-            type="boolean" />
-        <variable
-            name="forwarded"
-            type="String" />
-        <variable
-            name="mode"
-            type="String" />
-        <variable
-            name="profileName"
-            type="String" />
-        <variable
-            name="colorClashStarted"
-            type="int" />
-        <variable
-            name="colorClashStopped"
-            type="int" />
-        <variable
-            name="hasProviders"
-            type="boolean" />
-
-        <import type="android.view.View" />
-        <import type="com.github.kr328.clash.design.MainDesign.Request" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@drawable/home_bg_gradient"
         android:paddingStart="@{self.surface.insets.start}"
         android:paddingEnd="@{self.surface.insets.end}">
 
@@ -45,111 +22,429 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:animateLayoutChanges="true"
                 android:clipToPadding="false"
                 android:orientation="vertical"
-                android:paddingHorizontal="@dimen/main_padding_horizontal"
+                android:paddingHorizontal="20dp"
                 android:paddingTop="@{self.surface.insets.top}"
-                android:paddingBottom="@{self.surface.insets.bottom}">
+                android:paddingBottom="112dp">
 
+                <!-- Top bar: cat mark only on the left, import + settings on the right -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_home_cat" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <FrameLayout
+                        android:id="@+id/topImport"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/home_icon_btn">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/baseline_qr_code_scanner"
+                            app:tint="@color/home_text_primary" />
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/topSettings"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/home_icon_btn">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_baseline_settings"
+                            app:tint="@color/home_text_primary" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <!-- Dotted world map with the node marker -->
+                <com.github.kr328.clash.design.view.WorldMapView
+                    android:id="@+id/mapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:layout_marginTop="6dp" />
+
+                <!-- Connection status card -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/home_glass_card"
                     android:gravity="center_vertical"
-                    android:minHeight="@dimen/main_top_banner_height"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <View
+                        android:id="@+id/statusDot"
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:background="@drawable/home_dot_off" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/statusText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/home_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/durationText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textColor="@color/home_text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.github.kr328.clash.design.view.SparklineView
+                        android:id="@+id/trafficSpark"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1" />
+                </LinearLayout>
+
+                <!-- Capsule connection control bar (no round power button) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="74dp"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/home_capsule_bar"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <View
+                        android:layout_width="44dp"
+                        android:layout_height="1dp" />
 
                     <FrameLayout
-                        android:layout_width="@dimen/large_item_header_layout_size"
-                        android:layout_height="@dimen/large_item_header_layout_size">
+                        android:id="@+id/powerBtn"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/home_power_btn_off">
+
+                        <ImageView
+                            android:id="@+id/powerIcon"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_home_power" />
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/flashBtn"
+                        android:layout_width="44dp"
+                        android:layout_height="52dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_baseline_flash_on"
+                            app:tint="@color/home_accent" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <!-- Current node card -->
+                <LinearLayout
+                    android:id="@+id/nodeCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/home_glass_card"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/nodeFlag"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="22sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/nodeLocation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/home_text_primary"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:id="@+id/nodeName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textColor="@color/home_text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/nodeDelay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/home_accent"
+                        android:textSize="14sp" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="4dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_home_chevron"
+                        app:tint="@color/home_text_secondary" />
+                </LinearLayout>
+
+                <!-- Traffic + proxy mode combined card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/home_glass_card"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_home_up"
+                                app:tint="@color/home_accent" />
+
+                            <TextView
+                                android:id="@+id/uploadText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:textColor="@color/home_text_primary"
+                                android:textSize="15sp" />
+                        </LinearLayout>
 
                         <View
-                            android:layout_width="@dimen/main_logo_size"
-                            android:layout_height="@dimen/main_logo_size"
-                            android:layout_gravity="center"
-                            android:background="@drawable/ic_clash" />
-                    </FrameLayout>
+                            android:layout_width="1dp"
+                            android:layout_height="28dp"
+                            android:background="@color/home_surface_inner" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical|end"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_home_down"
+                                app:tint="@color/home_accent" />
+
+                            <TextView
+                                android:id="@+id/downloadText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:textColor="@color/home_text_primary"
+                                android:textSize="15sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="16dp"
+                        android:background="@color/home_surface_inner" />
+
+                    <LinearLayout
+                        android:id="@+id/modeRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_baseline_swap_vertical_circle"
+                            app:tint="@color/home_accent" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="@string/home_proxy_mode"
+                            android:textColor="@color/home_text_primary"
+                            android:textSize="14sp" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/modeText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/home_accent"
+                            android:textSize="14sp" />
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginStart="4dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_home_chevron"
+                            app:tint="@color/home_text_secondary" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Retained entries: providers and logs stay reachable -->
+                <LinearLayout
+                    android:id="@+id/providersRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/home_glass_card"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_baseline_cloud_download"
+                        app:tint="@color/home_text_secondary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/application_name"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+                        android:layout_marginStart="10dp"
+                        android:text="@string/providers"
+                        android:textColor="@color/home_text_primary"
+                        android:textSize="14sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_home_chevron"
+                        app:tint="@color/home_text_secondary" />
                 </LinearLayout>
 
-                <com.github.kr328.clash.design.view.LargeActionCard
+                <LinearLayout
+                    android:id="@+id/moreRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginVertical="@dimen/main_card_margin_vertical"
-                    android:onClick="@{() -> self.request(Request.ToggleStatus)}"
-                    android:theme="@style/AppThemeDark"
-                    app:cardBackgroundColor="@{clashRunning ? colorClashStarted : colorClashStopped}"
-                    app:icon="@{clashRunning ? @drawable/ic_outline_check_circle : @drawable/ic_outline_not_interested}"
-                    app:subtext="@{clashRunning ? @string/format_traffic_forwarded(forwarded) : @string/tap_to_start}"
-                    app:text="@{clashRunning ? @string/running : @string/stopped}">
-                    <requestFocus />
-                </com.github.kr328.clash.design.view.LargeActionCard>
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/home_glass_card"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
 
-                <com.github.kr328.clash.design.view.LargeActionCard
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="@dimen/main_card_margin_vertical"
-                    android:onClick="@{() -> self.request(Request.OpenProxy)}"
-                    android:visibility="@{clashRunning ? View.VISIBLE : View.GONE}"
-                    app:icon="@drawable/ic_baseline_apps"
-                    app:subtext="@{mode}"
-                    app:text="@string/proxy" />
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_baseline_assignment"
+                        app:tint="@color/home_text_secondary" />
 
-                <com.github.kr328.clash.design.view.LargeActionCard
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="@dimen/main_card_margin_vertical"
-                    android:onClick="@{() -> self.request(Request.OpenProfiles)}"
-                    app:icon="@drawable/ic_baseline_view_list"
-                    app:subtext="@{profileName != null ? @string/format_profile_activated(profileName) : @string/not_selected}"
-                    app:text="@string/profile" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="@string/logs"
+                        android:textColor="@color/home_text_primary"
+                        android:textSize="14sp" />
 
-                <com.github.kr328.clash.design.view.LargeActionLabel
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginVertical="@dimen/main_label_margin_vertical"
-                    android:onClick="@{() -> self.request(Request.OpenProviders)}"
-                    android:visibility="@{clashRunning &amp;&amp; hasProviders ? View.VISIBLE : View.GONE}"
-                    app:icon="@drawable/ic_baseline_swap_vertical_circle"
-                    app:text="@string/providers" />
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
 
-                <com.github.kr328.clash.design.view.LargeActionLabel
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="@dimen/main_label_margin_vertical"
-                    android:onClick="@{() -> self.request(Request.OpenLogs)}"
-                    app:icon="@drawable/ic_baseline_assignment"
-                    app:text="@string/logs" />
-
-                <com.github.kr328.clash.design.view.LargeActionLabel
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="@dimen/main_label_margin_vertical"
-                    android:onClick="@{() -> self.request(Request.OpenSettings)}"
-                    app:icon="@drawable/ic_baseline_settings"
-                    app:text="@string/settings" />
-
-                <com.github.kr328.clash.design.view.LargeActionLabel
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="@dimen/main_label_margin_vertical"
-                    android:onClick="@{() -> self.request(Request.OpenHelp)}"
-                    app:icon="@drawable/ic_baseline_help_center"
-                    app:text="@string/help" />
-
-                <com.github.kr328.clash.design.view.LargeActionLabel
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginVertical="@dimen/main_label_margin_vertical"
-                    android:onClick="@{() -> self.request(Request.OpenAbout)}"
-                    app:icon="@drawable/ic_baseline_info"
-                    app:text="@string/about" />
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_home_chevron"
+                        app:tint="@color/home_text_secondary" />
+                </LinearLayout>
             </LinearLayout>
         </ScrollView>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="@{self.surface.insets.bottom}">
+
+            <include
+                android:id="@+id/navBar"
+                layout="@layout/layout_home_nav"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp" />
+        </FrameLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

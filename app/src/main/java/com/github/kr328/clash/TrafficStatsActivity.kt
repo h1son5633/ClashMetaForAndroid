@@ -13,10 +13,12 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Statistics page backed by the core's real counters: traffic used
- * this session (queryTrafficTotal), live rates (queryTrafficNow) and
- * the connection duration tracked from the clash start event.
+ * this session (queryTrafficTotal), live rates derived from those
+ * totals sampled once per second, and the connection duration
+ * tracked from the clash start event.
  */
 class TrafficStatsActivity : BaseActivity<TrafficStatsDesign>() {
+    private var lastTotal: Pair<Long, Long>? = null
     override suspend fun main() {
         val design = TrafficStatsDesign(this)
         setContentDesign(design)
@@ -63,6 +65,7 @@ class TrafficStatsActivity : BaseActivity<TrafficStatsDesign>() {
 
     private suspend fun TrafficStatsDesign.fetch() {
         if (!clashRunning) {
+            lastTotal = null
             setTotals("0 Bytes", "0 Bytes", "0 Bytes")
             clearLive()
             setDuration("00:00:00")
@@ -74,15 +77,43 @@ class TrafficStatsActivity : BaseActivity<TrafficStatsDesign>() {
         }
 
         val total = withClash { queryTrafficTotal() }
-        val now = withClash { queryTrafficNow() }
 
         setTotals(total.trafficUpload(), total.trafficDownload(), total.trafficTotal())
-        setSpeeds(now.trafficUpload() + "/s", now.trafficDownload() + "/s")
-        pushTrafficSample(unpackTraffic(now ushr 32), unpackTraffic(now and 0xFFFFFFFFL))
+
+        // The remote manager exposes no instantaneous-rate call, so the
+        // live rates are derived from the session totals sampled 1s apart.
+        val nowMs = System.currentTimeMillis()
+        val upBytes = unpackTraffic(total ushr 32)
+        val downBytes = unpackTraffic(total and 0xFFFFFFFFL)
+
+        var upRate = 0L
+        var downRate = 0L
+        val last = lastTotal
+        if (last != null && nowMs > last.second) {
+            val dtSec = (nowMs - last.second) / 1000.0
+            val lastUp = unpackTraffic(last.first ushr 32)
+            val lastDown = unpackTraffic(last.first and 0xFFFFFFFFL)
+            if (upBytes >= lastUp) upRate = ((upBytes - lastUp) / dtSec).toLong()
+            if (downBytes >= lastDown) downRate = ((downBytes - lastDown) / dtSec).toLong()
+        }
+        lastTotal = total to nowMs
+
+        setSpeeds(formatBytesPerSec(upRate), formatBytesPerSec(downRate))
+        pushTrafficSample(upRate, downRate)
 
         val startedAt = uiStore.clashStartedAt
         if (startedAt > 0L) {
             setDuration(formatDuration(System.currentTimeMillis() - startedAt))
+        }
+    }
+
+    private fun formatBytesPerSec(bytesPerSec: Long): String {
+        return when {
+            bytesPerSec >= 1024L * 1024L ->
+                String.format("%.1f MiB/s", bytesPerSec / 1024.0 / 1024.0)
+            bytesPerSec >= 1024L ->
+                String.format("%.1f KiB/s", bytesPerSec / 1024.0)
+            else -> "$bytesPerSec B/s"
         }
     }
 

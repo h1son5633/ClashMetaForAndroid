@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit
 import com.github.kr328.clash.design.R as DesignR
 
 class MainActivity : BaseActivity<MainDesign>() {
+    private var lastTrafficTotal: Long = -1L
+    private var lastTrafficAt: Long = 0L
     override suspend fun main() {
         val design = MainDesign(this)
 
@@ -95,7 +97,18 @@ class MainActivity : BaseActivity<MainDesign>() {
                             startActivity(HubActivity::class.intent)
                         MainDesign.Request.HealthCheck -> {
                             if (clashRunning) {
-                                withClash { healthCheckAll() }
+                                withClash {
+                                    val names = queryProxyGroupNames(excludeNotSelectable = false)
+                                    var checked = 0
+                                    for (name in names) {
+                                        if (checked >= 6) break
+                                        val group = queryProxyGroup(name, ProxySort.Default)
+                                        if (group.type.equals("Selector", ignoreCase = true)) {
+                                            healthCheck(name)
+                                            checked++
+                                        }
+                                    }
+                                }
                                 kotlinx.coroutines.delay(1500)
                                 design.fetchNode()
                             }
@@ -137,16 +150,16 @@ class MainActivity : BaseActivity<MainDesign>() {
 
         val node: Proxy? = withClash {
             var found: Proxy? = null
-            val names = queryGroupNames(excludeNotSelectable = false)
+            val names = queryProxyGroupNames(excludeNotSelectable = false)
             var queried = 0
             for (name in names) {
                 if (found != null || queried >= 6) break
-                val group = queryGroup(name, ProxySort.Default)
+                val group = queryProxyGroup(name, ProxySort.Default)
                 queried++
                 if (!group.type.equals("Selector", ignoreCase = true)) continue
                 val now = group.proxies.firstOrNull { it.name == group.now } ?: continue
                 found = if (now.isGroup) {
-                    val sub = queryGroup(now.name, ProxySort.Default)
+                    val sub = queryProxyGroup(now.name, ProxySort.Default)
                     sub.proxies.firstOrNull { it.name == sub.now }
                 } else {
                     now
@@ -159,14 +172,42 @@ class MainActivity : BaseActivity<MainDesign>() {
     }
 
     private suspend fun MainDesign.fetchTraffic() {
-        val now = withClash { queryTrafficNow() }
+        // The remote manager exposes no instantaneous-rate call, so the
+        // live rates are derived from the session totals sampled 1s apart.
+        val total = withClash { queryTrafficTotal() }
+        val nowMs = System.currentTimeMillis()
 
-        setSpeeds(now.trafficUpload() + "/s", now.trafficDownload() + "/s")
-        pushTrafficSample(unpackTraffic(now ushr 32), unpackTraffic(now and 0xFFFFFFFFL))
+        val upBytes = unpackTraffic(total ushr 32)
+        val downBytes = unpackTraffic(total and 0xFFFFFFFFL)
+
+        var upRate = 0L
+        var downRate = 0L
+        if (lastTrafficTotal >= 0L && nowMs > lastTrafficAt) {
+            val dtSec = (nowMs - lastTrafficAt) / 1000.0
+            val lastUp = unpackTraffic(lastTrafficTotal ushr 32)
+            val lastDown = unpackTraffic(lastTrafficTotal and 0xFFFFFFFFL)
+            if (upBytes >= lastUp) upRate = ((upBytes - lastUp) / dtSec).toLong()
+            if (downBytes >= lastDown) downRate = ((downBytes - lastDown) / dtSec).toLong()
+        }
+        lastTrafficTotal = total
+        lastTrafficAt = nowMs
+
+        setSpeeds(formatBytesPerSec(upRate), formatBytesPerSec(downRate))
+        pushTrafficSample(upRate, downRate)
 
         val startedAt = uiStore.clashStartedAt
         if (startedAt > 0L) {
             setDuration(formatDuration(System.currentTimeMillis() - startedAt))
+        }
+    }
+
+    private fun formatBytesPerSec(bytesPerSec: Long): String {
+        return when {
+            bytesPerSec >= 1024L * 1024L ->
+                String.format("%.1f MiB/s", bytesPerSec / 1024.0 / 1024.0)
+            bytesPerSec >= 1024L ->
+                String.format("%.1f KiB/s", bytesPerSec / 1024.0)
+            else -> "$bytesPerSec B/s"
         }
     }
 

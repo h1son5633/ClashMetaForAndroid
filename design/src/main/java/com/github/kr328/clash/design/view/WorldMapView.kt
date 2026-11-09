@@ -4,11 +4,13 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Path
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.content.ContextCompat
 import com.github.kr328.clash.design.R
+import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -22,7 +24,9 @@ import kotlin.math.sin
  * The view is centred on East Asia by default. [setMarker] rotates the
  * globe smoothly until the node's capital faces the viewer and shows
  * the breathing marker there. [clearMarker] fades the marker out.
- * There is deliberately no route arc: the map only marks the node.
+ * While the marker is shown, a glowing great-circle arc runs from a
+ * nominal local anchor (Beijing — the app never reads the device's
+ * real location) to the marker, with light dots flowing along it.
  */
 class WorldMapView @JvmOverloads constructor(
     context: Context,
@@ -37,6 +41,13 @@ class WorldMapView @JvmOverloads constructor(
         private const val LAT_BOTTOM = -56.0
         private const val DEFAULT_CENTER_LAT = 26.0
         private const val DEFAULT_CENTER_LON = 112.0
+
+        // Nominal local end of the route arc (Beijing). Not a measured
+        // position: the app has no location access, this is just the
+        // anchor the arc starts from, mirroring the capital pinning
+        // used for the node end.
+        private const val LOCAL_ANCHOR_LAT = 39.9
+        private const val LOCAL_ANCHOR_LON = 116.4
     }
 
     private val spherePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -65,6 +76,25 @@ class WorldMapView @JvmOverloads constructor(
         color = ContextCompat.getColor(context, R.color.home_text_primary)
         style = Paint.Style.FILL
     }
+    private val arcGlowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = ContextCompat.getColor(context, R.color.home_accent)
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+    }
+    private val arcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = ContextCompat.getColor(context, R.color.home_accent)
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+    }
+    private val flowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = ContextCompat.getColor(context, R.color.home_accent)
+        style = Paint.Style.FILL
+    }
+    private val localRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = ContextCompat.getColor(context, R.color.home_text_secondary)
+        style = Paint.Style.STROKE
+    }
+    private val arcPath = Path()
 
     // Land cells converted to (lat, lon) in degrees, computed once.
     private val landLatLon: List<Pair<Double, Double>> by lazy { loadLandLatLon() }
@@ -146,6 +176,98 @@ class WorldMapView @JvmOverloads constructor(
         projKeyLat = centerLat
         projKeyLon = centerLon
         projKeySize = sizeKey
+    }
+
+    // Unit vector of a lat/lon point in view space (x right, y up, z toward viewer).
+    private fun viewVec(lat: Double, lon: Double, out: FloatArray) {
+        val phi = Math.toRadians(lat)
+        val phi0 = Math.toRadians(centerLat)
+        val dLon = Math.toRadians(lon - centerLon)
+        out[0] = (cos(phi) * sin(dLon)).toFloat()
+        out[1] = (cos(phi0) * sin(phi) - sin(phi0) * cos(phi) * cos(dLon)).toFloat()
+        out[2] = (sin(phi0) * sin(phi) + cos(phi0) * cos(phi) * cos(dLon)).toFloat()
+    }
+
+    /**
+     * Glowing great-circle arc from the nominal local anchor to the node
+     * marker, lifted above the surface, plus light dots flowing along it.
+     * Only the front-facing part is drawn; alpha follows the marker fade,
+     * so the arc disappears together with the marker on disconnect.
+     */
+    private fun drawArc(canvas: Canvas, cx: Float, cy: Float, r: Float, baseRadius: Float) {
+        val a = FloatArray(3)
+        val b = FloatArray(3)
+        viewVec(LOCAL_ANCHOR_LAT, LOCAL_ANCHOR_LON, a)
+        viewVec(markerLat, markerLon, b)
+        val dot = (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]).toDouble().coerceIn(-1.0, 1.0)
+        val omega = acos(dot)
+        if (omega < 0.03) return
+        val sinOmega = sin(omega)
+        if (sinOmega < 1e-4) return
+        val maxLift = 0.30 * sin(omega / 2.0)
+        val alpha = (markerAlpha * 255).toInt()
+
+        fun slerp(t: Double, out: FloatArray) {
+            val s0 = sin((1.0 - t) * omega) / sinOmega
+            val s1 = sin(t * omega) / sinOmega
+            val lift = 1.0 + maxLift * sin(Math.PI * t)
+            out[0] = ((s0 * a[0] + s1 * b[0]) * lift).toFloat()
+            out[1] = ((s0 * a[1] + s1 * b[1]) * lift).toFloat()
+            out[2] = (s0 * a[2] + s1 * b[2]).toFloat()
+        }
+
+        // Local anchor dot (the arc's nominal origin)
+        val tmp = FloatArray(3)
+        if (project(LOCAL_ANCHOR_LAT, LOCAL_ANCHOR_LON, cx, cy, r, tmp)) {
+            localRingPaint.alpha = (alpha * 0.9f).toInt()
+            localRingPaint.strokeWidth = baseRadius * 0.22f
+            canvas.drawCircle(tmp[0], tmp[1], baseRadius * 0.5f, localRingPaint)
+            corePaint.alpha = (alpha * 0.9f).toInt()
+            canvas.drawCircle(tmp[0], tmp[1], baseRadius * 0.22f, corePaint)
+        }
+
+        // Arc body: consecutive front-facing samples only
+        val v = FloatArray(3)
+        arcPath.reset()
+        var penDown = false
+        val steps = 48
+        for (i in 0..steps) {
+            val t = i.toDouble() / steps
+            slerp(t, v)
+            if (v[2] < 0f) {
+                penDown = false
+                continue
+            }
+            val px = cx + v[0] * r
+            val py = cy - v[1] * r
+            if (penDown) {
+                arcPath.lineTo(px, py)
+            } else {
+                arcPath.moveTo(px, py)
+                penDown = true
+            }
+        }
+        arcGlowPaint.alpha = (alpha * 0.20f).toInt()
+        arcGlowPaint.strokeWidth = (r * 0.030f).coerceAtLeast(3f)
+        canvas.drawPath(arcPath, arcGlowPaint)
+        arcPaint.alpha = (alpha * 0.85f).toInt()
+        arcPaint.strokeWidth = (r * 0.011f).coerceAtLeast(1.5f)
+        canvas.drawPath(arcPath, arcPaint)
+
+        // Flowing light dots riding the arc
+        for (k in 0 until 3) {
+            val t = (pulsePhase.toDouble() + k / 3.0) % 1.0
+            slerp(t, v)
+            if (v[2] < 0f) continue
+            val px = cx + v[0] * r
+            val py = cy - v[1] * r
+            flowPaint.alpha = (alpha * 0.30f).toInt()
+            canvas.drawCircle(px, py, baseRadius * 0.85f, flowPaint)
+            flowPaint.alpha = alpha
+            canvas.drawCircle(px, py, baseRadius * 0.42f, flowPaint)
+            corePaint.alpha = alpha
+            canvas.drawCircle(px, py, baseRadius * 0.18f, corePaint)
+        }
     }
 
     /** Rotate the globe to face [latitude]/[longitude] and show the marker there. */
@@ -247,6 +369,11 @@ class WorldMapView @JvmOverloads constructor(
             canvas.drawCircle(projX[i], projY[i], dotRadius, dotPaint)
         }
         dotPaint.alpha = 255
+
+        // Route arc + flowing dots, tied to the marker's visibility
+        if (!markerLat.isNaN() && markerAlpha > 0f) {
+            drawArc(canvas, cx, cy, r, r * 0.045f)
+        }
 
         // Marker
         if (markerLat.isNaN() || markerAlpha <= 0f) return

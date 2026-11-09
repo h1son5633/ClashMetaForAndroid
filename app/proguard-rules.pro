@@ -57,3 +57,10 @@
     boolean getDEBUG() return false;
     boolean getRECOVER_STACK_TRACES() return false;
 }
+
+# LiquidGlass (com.example.liquidglass) references Android 16 (API 36)
+# graphics classes that do not exist in this project's compile SDK 35.
+# They are only invoked on API 36+ devices behind runtime checks, so
+# silence R8's missing-class errors for them.
+-dontwarn android.graphics.RuntimeColorFilter
+-dontwarn android.graphics.RuntimeXfermode

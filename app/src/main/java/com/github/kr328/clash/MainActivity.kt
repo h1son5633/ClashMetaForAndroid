@@ -15,8 +15,13 @@ import androidx.core.graphics.drawable.IconCompat
 import com.github.kr328.clash.common.constants.Intents
 import com.github.kr328.clash.common.util.intent
 import com.github.kr328.clash.common.util.ticker
+import com.github.kr328.clash.core.model.Proxy
+import com.github.kr328.clash.core.model.ProxySort
+import com.github.kr328.clash.core.util.trafficDownload
+import com.github.kr328.clash.core.util.trafficUpload
 import com.github.kr328.clash.design.MainDesign
 import com.github.kr328.clash.design.ui.ToastDuration
+import com.github.kr328.clash.design.util.NodeGeo
 import com.github.kr328.clash.util.startClashService
 import com.github.kr328.clash.util.stopClashService
 import com.github.kr328.clash.util.withClash
@@ -43,9 +48,16 @@ class MainActivity : BaseActivity<MainDesign>() {
             select<Unit> {
                 events.onReceive {
                     when (it) {
+                        Event.ClashStart -> {
+                            uiStore.clashStartedAt = System.currentTimeMillis()
+                            design.fetch()
+                        }
+                        Event.ClashStop -> {
+                            uiStore.clashStartedAt = 0L
+                            design.fetch()
+                        }
                         Event.ActivityStart,
                         Event.ServiceRecreated,
-                        Event.ClashStop, Event.ClashStart,
                         Event.ProfileLoaded, Event.ProfileChanged -> design.fetch()
                         else -> Unit
                     }
@@ -77,6 +89,17 @@ class MainActivity : BaseActivity<MainDesign>() {
                             startActivity(HelpActivity::class.intent)
                         MainDesign.Request.OpenAbout ->
                             design.showAbout(queryAppVersionName())
+                        MainDesign.Request.OpenStats ->
+                            startActivity(TrafficStatsActivity::class.intent)
+                        MainDesign.Request.OpenHub ->
+                            startActivity(HubActivity::class.intent)
+                        MainDesign.Request.HealthCheck -> {
+                            if (clashRunning) {
+                                withClash { healthCheckAll() }
+                                kotlinx.coroutines.delay(1500)
+                                design.fetchNode()
+                            }
+                        }
                     }
                 }
                 if (clashRunning) {
@@ -91,25 +114,79 @@ class MainActivity : BaseActivity<MainDesign>() {
     private suspend fun MainDesign.fetch() {
         setClashRunning(clashRunning)
 
+        if (clashRunning && uiStore.clashStartedAt == 0L) {
+            // The start event was missed (e.g. the app process restarted
+            // while the service kept running): count from first sight.
+            uiStore.clashStartedAt = System.currentTimeMillis()
+        }
+
         val state = withClash {
             queryTunnelState()
         }
-        val providers = withClash {
-            queryProviders()
-        }
 
         setMode(state.mode)
-        setHasProviders(providers.isNotEmpty())
+        fetchNode()
+        if (clashRunning) fetchTraffic()
+    }
 
-        withProfile {
-            setProfileName(queryActive()?.name)
+    private suspend fun MainDesign.fetchNode() {
+        if (!clashRunning) {
+            setNode(null, null, 0, running = false)
+            return
         }
+
+        val node: Proxy? = withClash {
+            var found: Proxy? = null
+            val names = queryGroupNames(excludeNotSelectable = false)
+            var queried = 0
+            for (name in names) {
+                if (found != null || queried >= 6) break
+                val group = queryGroup(name, ProxySort.Default)
+                queried++
+                if (!group.type.equals("Selector", ignoreCase = true)) continue
+                val now = group.proxies.firstOrNull { it.name == group.now } ?: continue
+                found = if (now.isGroup) {
+                    val sub = queryGroup(now.name, ProxySort.Default)
+                    sub.proxies.firstOrNull { it.name == sub.now }
+                } else {
+                    now
+                }
+            }
+            found
+        }
+
+        setNode(NodeGeo.resolve(node?.name), node?.name, node?.delay ?: 0, running = true)
     }
 
     private suspend fun MainDesign.fetchTraffic() {
-        withClash {
-            setForwarded(queryTrafficTotal())
+        val now = withClash { queryTrafficNow() }
+
+        setSpeeds(now.trafficUpload() + "/s", now.trafficDownload() + "/s")
+        pushTrafficSample(unpackTraffic(now ushr 32), unpackTraffic(now and 0xFFFFFFFFL))
+
+        val startedAt = uiStore.clashStartedAt
+        if (startedAt > 0L) {
+            setDuration(formatDuration(System.currentTimeMillis() - startedAt))
         }
+    }
+
+    private fun unpackTraffic(packed: Long): Long {
+        val type = (packed ushr 30) and 0x3L
+        val data = packed and 0x3FFFFFFFL
+        return when (type) {
+            0L -> data
+            1L -> data * 1024L
+            2L -> data * 1024L * 1024L
+            else -> data * 1024L * 1024L * 1024L
+        }
+    }
+
+    private fun formatDuration(elapsedMs: Long): String {
+        val totalSeconds = (elapsedMs / 1000L).coerceAtLeast(0L)
+        val hours = totalSeconds / 3600L
+        val minutes = totalSeconds % 3600L / 60L
+        val seconds = totalSeconds % 60L
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
     private suspend fun MainDesign.startClash() {

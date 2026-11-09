@@ -282,4 +282,19 @@
     <string name="shortcut_start_long">启动 Clash 服务</string>
     <string name="shortcut_stop_short">停止 Clash</string>
     <string name="shortcut_stop_long">停止 Clash 服务</string>
+
+    <string name="home_connected">已连接</string>
+    <string name="home_disconnected">未连接</string>
+    <string name="home_proxy_mode">代理模式</string>
+    <string name="home_unknown_location">未知位置</string>
+    <string name="home_no_node">未选择节点</string>
+    <string name="home_nav_home">首页</string>
+    <string name="home_nav_stats">统计</string>
+    <string name="home_nav_hub">代理</string>
+    <string name="home_nav_settings">设置</string>
+    <string name="home_stats_used">已用流量</string>
+    <string name="home_upload">上传</string>
+    <string name="home_download">下载</string>
+    <string name="home_total">合计</string>
+    <string name="home_duration">连接时长</string>
 </resources>

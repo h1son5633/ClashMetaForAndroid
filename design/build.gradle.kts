@@ -19,4 +19,7 @@ dependencies {
     implementation(libs.androidx.viewpager)
     implementation(libs.google.material)
     implementation(libs.zxing.core)
+
+    // Liquid Glass for the Android View system (bottom nav trial)
+    implementation("com.github.QWEA0:liquidglass:v2.0.11")
 }

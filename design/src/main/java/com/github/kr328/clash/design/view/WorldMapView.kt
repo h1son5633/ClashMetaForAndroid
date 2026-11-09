@@ -2,7 +2,6 @@ package com.github.kr328.clash.design.view
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
@@ -10,19 +9,20 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.content.ContextCompat
 import com.github.kr328.clash.design.R
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
- * Dotted world map with a single glowing location marker.
+ * Dotted world map drawn as a globe (orthographic projection): the land
+ * dots from res/raw/world_dots.txt (a 120x56 equirectangular grid,
+ * latitude range [+84, -56], Antarctica omitted) are projected onto a
+ * disc, so the visible hemisphere curves like a planet. Dots near the
+ * limb fade out, which sells the spherical look.
  *
- * The land dots come from res/raw/world_dots.txt: a 120x56 grid sampled
- * from public-domain world geography in equirectangular projection,
- * latitude range [+84, -56] (Antarctica omitted). The static dot layer
- * is rendered once per size into a cached bitmap; only the marker is
- * redrawn while it pulses, and the pulse stops when the view leaves
- * the window.
- *
- * There is deliberately no route arc: per the product decision the map
- * only marks the current node's capital location.
+ * The view is centred on East Asia by default. [setMarker] rotates the
+ * globe smoothly until the node's capital faces the viewer and shows
+ * the breathing marker there. [clearMarker] fades the marker out.
+ * There is deliberately no route arc: the map only marks the node.
  */
 class WorldMapView @JvmOverloads constructor(
     context: Context,
@@ -35,8 +35,19 @@ class WorldMapView @JvmOverloads constructor(
         private const val GRID_ROWS = 56
         private const val LAT_TOP = 84.0
         private const val LAT_BOTTOM = -56.0
+        private const val DEFAULT_CENTER_LAT = 26.0
+        private const val DEFAULT_CENTER_LON = 112.0
     }
 
+    private val spherePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = ContextCompat.getColor(context, R.color.home_surface)
+        style = Paint.Style.FILL
+    }
+    private val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = ContextCompat.getColor(context, R.color.home_surface_stroke)
+        style = Paint.Style.STROKE
+        strokeWidth = 1.5f
+    }
     private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ContextCompat.getColor(context, R.color.home_map_dot)
         style = Paint.Style.FILL
@@ -55,77 +66,107 @@ class WorldMapView @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
-    private val landCells: List<Pair<Int, Int>> by lazy { loadLandCells() }
+    // Land cells converted to (lat, lon) in degrees, computed once.
+    private val landLatLon: List<Pair<Double, Double>> by lazy { loadLandLatLon() }
 
-    private var dotsBitmap: Bitmap? = null
-    private var gridLeft = 0f
-    private var gridTop = 0f
-    private var cellSize = 0f
+    // Globe centre currently shown (degrees).
+    private var centerLat = DEFAULT_CENTER_LAT
+    private var centerLon = DEFAULT_CENTER_LON
 
-    // Marker position as grid fractions (x: 0..1 over lon, y: 0..1 over lat range)
-    private var markerX = -1f
-    private var markerY = -1f
+    // Projected dot cache for the current centre: x, y, shading per dot.
+    private var projX = FloatArray(0)
+    private var projY = FloatArray(0)
+    private var projShade = FloatArray(0)
+    private var projCount = 0
+    private var projKeyLat = Double.NaN
+    private var projKeyLon = Double.NaN
+    private var projKeySize = -1
+
+    // Marker target (degrees); invalid when latitude is NaN.
+    private var markerLat = Double.NaN
+    private var markerLon = Double.NaN
     private var markerAlpha = 0f
     private var pulsePhase = 0f
 
-    private var moveAnimator: ValueAnimator? = null
+    private var rotateAnimator: ValueAnimator? = null
     private var fadeAnimator: ValueAnimator? = null
     private var pulseAnimator: ValueAnimator? = null
 
-    private fun loadLandCells(): List<Pair<Int, Int>> {
-        val cells = ArrayList<Pair<Int, Int>>(2200)
+    private fun loadLandLatLon(): List<Pair<Double, Double>> {
+        val cells = ArrayList<Pair<Double, Double>>(2200)
         val lines = resources.openRawResource(R.raw.world_dots)
             .bufferedReader().readLines()
         for ((row, line) in lines.withIndex()) {
             if (row >= GRID_ROWS) break
+            val lat = LAT_TOP - (row + 0.5) * (LAT_TOP - LAT_BOTTOM) / GRID_ROWS
             for ((col, ch) in line.withIndex()) {
                 if (col >= GRID_COLS) break
-                if (ch == '#') cells.add(col to row)
+                if (ch == '#') {
+                    val lon = (col + 0.5) * 360.0 / GRID_COLS - 180.0
+                    cells.add(lat to lon)
+                }
             }
         }
         return cells
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        if (w <= 0 || h <= 0) return
-        cellSize = minOf(w.toFloat() / GRID_COLS, h.toFloat() / GRID_ROWS)
-        gridLeft = (w - cellSize * GRID_COLS) / 2f
-        gridTop = (h - cellSize * GRID_ROWS) / 2f
-        renderDotsBitmap(w, h)
+    private fun project(lat: Double, lon: Double, cx: Float, cy: Float, r: Float, out: FloatArray): Boolean {
+        val phi = Math.toRadians(lat)
+        val phi0 = Math.toRadians(centerLat)
+        val dLon = Math.toRadians(lon - centerLon)
+        val cosC = sin(phi0) * sin(phi) + cos(phi0) * cos(phi) * cos(dLon)
+        if (cosC <= 0.0) return false
+        val x = cos(phi) * sin(dLon)
+        val y = cos(phi0) * sin(phi) - sin(phi0) * cos(phi) * cos(dLon)
+        out[0] = cx + (x * r).toFloat()
+        out[1] = cy - (y * r).toFloat()
+        out[2] = cosC.toFloat()
+        return true
     }
 
-    private fun renderDotsBitmap(w: Int, h: Int) {
-        dotsBitmap?.recycle()
-        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        val radius = cellSize * 0.30f
-        for ((col, row) in landCells) {
-            val cx = gridLeft + (col + 0.5f) * cellSize
-            val cy = gridTop + (row + 0.5f) * cellSize
-            canvas.drawCircle(cx, cy, radius, dotPaint)
+    private fun ensureProjection(cx: Float, cy: Float, r: Float) {
+        val sizeKey = (r * 2).toInt()
+        if (projKeyLat == centerLat && projKeyLon == centerLon && projKeySize == sizeKey) return
+        if (projX.size != landLatLon.size) {
+            projX = FloatArray(landLatLon.size)
+            projY = FloatArray(landLatLon.size)
+            projShade = FloatArray(landLatLon.size)
         }
-        dotsBitmap = bitmap
+        val tmp = FloatArray(3)
+        var n = 0
+        for ((lat, lon) in landLatLon) {
+            if (project(lat, lon, cx, cy, r, tmp)) {
+                projX[n] = tmp[0]
+                projY[n] = tmp[1]
+                projShade[n] = tmp[2]
+                n++
+            }
+        }
+        projCount = n
+        projKeyLat = centerLat
+        projKeyLon = centerLon
+        projKeySize = sizeKey
     }
 
-    /** Show the marker at [latitude]/[longitude], animating from the old spot. */
+    /** Rotate the globe to face [latitude]/[longitude] and show the marker there. */
     fun setMarker(latitude: Double, longitude: Double) {
-        val targetX = ((longitude + 180.0) / 360.0).toFloat()
-        val targetY = ((LAT_TOP - latitude) / (LAT_TOP - LAT_BOTTOM)).toFloat()
-        if (markerX < 0f) {
-            markerX = targetX
-            markerY = targetY
-        } else if (markerX != targetX || markerY != targetY) {
-            val startX = markerX
-            val startY = markerY
-            moveAnimator?.cancel()
-            moveAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-                duration = 600
+        markerLat = latitude
+        markerLon = longitude
+        val startLat = centerLat
+        val startLon = centerLon
+        var dLon = (longitude - startLon) % 360.0
+        if (dLon > 180.0) dLon -= 360.0
+        if (dLon < -180.0) dLon += 360.0
+        val dLat = latitude - startLat
+        if (dLat != 0.0 || dLon != 0.0) {
+            rotateAnimator?.cancel()
+            rotateAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+                duration = 900
                 interpolator = DecelerateInterpolator()
                 addUpdateListener {
                     val t = it.animatedValue as Float
-                    markerX = startX + (targetX - startX) * t
-                    markerY = startY + (targetY - startY) * t
+                    centerLat = startLat + dLat * t
+                    centerLon = startLon + dLon * t
                     invalidate()
                 }
                 start()
@@ -147,6 +188,8 @@ class WorldMapView @JvmOverloads constructor(
 
     /** Fade the marker out (disconnected or unknown location). */
     fun clearMarker() {
+        markerLat = Double.NaN
+        markerLon = Double.NaN
         if (markerAlpha <= 0f) return
         fadeAnimator?.cancel()
         fadeAnimator = ValueAnimator.ofFloat(markerAlpha, 0f).apply {
@@ -181,38 +224,54 @@ class WorldMapView @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         stopPulse()
-        moveAnimator?.cancel()
+        rotateAnimator?.cancel()
         fadeAnimator?.cancel()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        dotsBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
-        if (markerX < 0f || markerAlpha <= 0f || cellSize == 0f) return
+        if (width == 0 || height == 0) return
+        val cx = width / 2f
+        val cy = height / 2f
+        val r = minOf(width, height) / 2f * 0.97f
 
-        val cx = gridLeft + markerX * cellSize * GRID_COLS
-        val cy = gridTop + markerY * cellSize * GRID_ROWS
-        val baseRadius = cellSize * 1.1f
+        // Sphere body + rim
+        canvas.drawCircle(cx, cy, r, spherePaint)
+        canvas.drawCircle(cx, cy, r, rimPaint)
+
+        // Land dots on the facing hemisphere, shaded toward the limb
+        ensureProjection(cx, cy, r)
+        val dotRadius = (r * 0.017f).coerceAtLeast(1.1f)
+        for (i in 0 until projCount) {
+            dotPaint.alpha = (40 + 215 * projShade[i]).toInt().coerceIn(0, 255)
+            canvas.drawCircle(projX[i], projY[i], dotRadius, dotPaint)
+        }
+        dotPaint.alpha = 255
+
+        // Marker
+        if (markerLat.isNaN() || markerAlpha <= 0f) return
+        val tmp = FloatArray(3)
+        if (!project(markerLat, markerLon, cx, cy, r, tmp)) return
+        val mx = tmp[0]
+        val my = tmp[1]
+        val baseRadius = r * 0.045f
         val alpha = (markerAlpha * 255).toInt()
 
-        // Expanding pulse ring
         val pulseRadius = baseRadius * (1.6f + 1.8f * pulsePhase)
         ringPaint.alpha = (alpha * (1f - pulsePhase) * 0.8f).toInt()
-        ringPaint.strokeWidth = cellSize * 0.35f
-        canvas.drawCircle(cx, cy, pulseRadius, ringPaint)
+        ringPaint.strokeWidth = baseRadius * 0.32f
+        canvas.drawCircle(mx, my, pulseRadius, ringPaint)
 
-        // Soft glow
         glowPaint.alpha = (alpha * 0.25f).toInt()
-        canvas.drawCircle(cx, cy, baseRadius * 1.9f, glowPaint)
+        canvas.drawCircle(mx, my, baseRadius * 1.9f, glowPaint)
 
-        // Breathing ring + core
-        val breathe = 1f + 0.12f * kotlin.math.sin(pulsePhase * 2 * Math.PI).toFloat()
+        val breathe = 1f + 0.12f * sin(pulsePhase * 2 * Math.PI).toFloat()
         ringPaint.alpha = alpha
-        ringPaint.strokeWidth = cellSize * 0.45f
-        canvas.drawCircle(cx, cy, baseRadius * breathe, ringPaint)
+        ringPaint.strokeWidth = baseRadius * 0.4f
+        canvas.drawCircle(mx, my, baseRadius * breathe, ringPaint)
         glowPaint.alpha = alpha
-        canvas.drawCircle(cx, cy, baseRadius * 0.55f, glowPaint)
+        canvas.drawCircle(mx, my, baseRadius * 0.55f, glowPaint)
         corePaint.alpha = alpha
-        canvas.drawCircle(cx, cy, baseRadius * 0.26f, corePaint)
+        canvas.drawCircle(mx, my, baseRadius * 0.26f, corePaint)
     }
 }

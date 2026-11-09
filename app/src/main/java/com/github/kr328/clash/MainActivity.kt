@@ -85,16 +85,22 @@ class MainActivity : BaseActivity<MainDesign>() {
                                 startActivity(LogsActivity::class.intent)
                             }
                         }
-                        MainDesign.Request.OpenSettings ->
+                        MainDesign.Request.OpenSettings -> {
                             startActivity(SettingsActivity::class.intent)
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
                         MainDesign.Request.OpenHelp ->
                             startActivity(HelpActivity::class.intent)
                         MainDesign.Request.OpenAbout ->
                             design.showAbout(queryAppVersionName())
-                        MainDesign.Request.OpenStats ->
+                        MainDesign.Request.OpenStats -> {
                             startActivity(TrafficStatsActivity::class.intent)
-                        MainDesign.Request.OpenHub ->
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
+                        MainDesign.Request.OpenHub -> {
                             startActivity(HubActivity::class.intent)
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
                         MainDesign.Request.HealthCheck -> {
                             if (clashRunning) {
                                 withClash {

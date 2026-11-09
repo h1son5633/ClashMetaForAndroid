@@ -60,6 +60,8 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
             binding.powerIcon.setColorFilter(
                 color(if (running) R.color.home_on_accent_ink else R.color.home_text_primary)
             )
+            binding.mapView.topInsetPx = surface.insets.top
+            binding.mapView.setConnected(running)
             if (!running) {
                 binding.durationText.text = "00:00:00"
                 binding.trafficSpark.clear()
@@ -157,6 +159,9 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
 
         // Bottom navigation: Home is the current page.
         val nav = binding.navBar
+        // Liquid Glass bar: the backdrop (globe / scrolled content) moves,
+        // so the glass must keep re-sampling it.
+        (nav.root as? com.example.liquidglass.LiquidGlassView)?.enableDynamicBackground = true
         nav.navHomeIcon.setColorFilter(color(R.color.home_accent))
         nav.navHomeText.setTextColor(color(R.color.home_accent))
         nav.navStatsIcon.setColorFilter(color(R.color.home_text_secondary))

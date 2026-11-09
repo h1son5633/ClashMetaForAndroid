@@ -133,6 +133,16 @@
             android:exported="false"
             android:label="@string/proxy" />
         <activity
+            android:name=".HubActivity"
+            android:configChanges="uiMode"
+            android:exported="false"
+            android:label="@string/home_nav_hub" />
+        <activity
+            android:name=".TrafficStatsActivity"
+            android:configChanges="uiMode"
+            android:exported="false"
+            android:label="@string/home_nav_stats" />
+        <activity
             android:name=".ProvidersActivity"
             android:configChanges="uiMode"
             android:exported="false"

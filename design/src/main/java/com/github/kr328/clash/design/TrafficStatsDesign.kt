@@ -1,6 +1,7 @@
 package com.github.kr328.clash.design
 
 import android.content.Context
+import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.github.kr328.clash.design.databinding.DesignStatsBinding
@@ -76,9 +77,9 @@ class TrafficStatsDesign(context: Context) : Design<TrafficStatsDesign.Request>(
         nav.navHubText.setTextColor(color(R.color.home_text_secondary))
         nav.navSettingsIcon.setColorFilter(color(R.color.home_text_secondary))
         nav.navSettingsText.setTextColor(color(R.color.home_text_secondary))
-        nav.navHome.setOnClickListener { request(Request.OpenHome) }
-        nav.navHub.setOnClickListener { request(Request.OpenHub) }
-        nav.navSettings.setOnClickListener { request(Request.OpenSettings) }
+        nav.navHome.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenHome) }
+        nav.navHub.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenHub) }
+        nav.navSettings.setOnClickListener { v -> v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); request(Request.OpenSettings) }
 
         binding.totalText.text = "0 Bytes"
         binding.uploadTotalText.text = "0 Bytes"

@@ -46,12 +46,18 @@ class TrafficStatsActivity : BaseActivity<TrafficStatsDesign>() {
                 }
                 design.requests.onReceive {
                     when (it) {
-                        TrafficStatsDesign.Request.OpenHome ->
+                        TrafficStatsDesign.Request.OpenHome -> {
                             startActivity(MainActivity::class.intent)
-                        TrafficStatsDesign.Request.OpenHub ->
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
+                        TrafficStatsDesign.Request.OpenHub -> {
                             startActivity(HubActivity::class.intent)
-                        TrafficStatsDesign.Request.OpenSettings ->
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
+                        TrafficStatsDesign.Request.OpenSettings -> {
                             startActivity(SettingsActivity::class.intent)
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
                     }
                 }
                 if (clashRunning) {

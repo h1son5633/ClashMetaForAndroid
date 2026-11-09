@@ -15,7 +15,9 @@ import com.github.kr328.clash.design.R
 /**
  * Small real-time traffic curve. Fed with genuine per-second samples
  * via [pushSample]; draws the download rate as a filled mint curve and
- * the upload rate as a thinner line. Redraws only when a sample
+ * the upload rate as a thinner line. The traces are drawn as
+ * smooth Catmull-Rom curves, not straight segments. Redraws only
+ * when a sample
  * arrives, never on a timer of its own.
  */
 class SparklineView @JvmOverloads constructor(
@@ -88,11 +90,30 @@ class SparklineView @JvmOverloads constructor(
         isDownload: Boolean,
     ) {
         linePath.reset()
+        val n = samples.size
+        val xs = FloatArray(n)
+        val ys = FloatArray(n)
         samples.forEachIndexed { i, sample ->
             val v = if (isDownload) sample.download else sample.upload
-            val x = startX + stepX * i
-            val y = 2f + usableHeight * (1f - v.toFloat() / maxValue.toFloat())
-            if (i == 0) linePath.moveTo(x, y) else linePath.lineTo(x, y)
+            xs[i] = startX + stepX * i
+            ys[i] = 2f + usableHeight * (1f - v.toFloat() / maxValue.toFloat())
+        }
+        // Catmull-Rom spline through the samples, emitted as cubic
+        // Beziers, so the trace is a smooth curve instead of straight
+        // segments. Control-point Y is clamped to the view bounds so
+        // the spline cannot overshoot above/below the plot area.
+        val maxY = 2f + usableHeight
+        linePath.moveTo(xs[0], ys[0])
+        for (i in 0 until n - 1) {
+            val p0x = xs[maxOf(i - 1, 0)]; val p0y = ys[maxOf(i - 1, 0)]
+            val p1x = xs[i]; val p1y = ys[i]
+            val p2x = xs[i + 1]; val p2y = ys[i + 1]
+            val p3x = xs[minOf(i + 2, n - 1)]; val p3y = ys[minOf(i + 2, n - 1)]
+            val c1x = p1x + (p2x - p0x) / 6f
+            val c1y = (p1y + (p2y - p0y) / 6f).coerceIn(2f, maxY)
+            val c2x = p2x - (p3x - p1x) / 6f
+            val c2y = (p2y - (p3y - p1y) / 6f).coerceIn(2f, maxY)
+            linePath.cubicTo(c1x, c1y, c2x, c2y, p2x, p2y)
         }
         if (isDownload) {
             fillPath.set(linePath)

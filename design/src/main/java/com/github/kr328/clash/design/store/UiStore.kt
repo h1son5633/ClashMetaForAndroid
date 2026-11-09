@@ -16,6 +16,11 @@ class UiStore(context: Context) {
             .asStoreProvider()
     )
 
+    var clashStartedAt: Long by store.long(
+        key = "clash_started_at",
+        defaultValue = 0L
+    )
+
     var enableVpn: Boolean by store.boolean(
         key = "enable_vpn",
         defaultValue = true

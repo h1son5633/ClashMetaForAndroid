@@ -27,6 +27,12 @@ import kotlin.math.sin
  * While the marker is shown, a glowing great-circle arc runs from a
  * nominal local anchor (Beijing — the app never reads the device's
  * real location) to the marker, with light dots flowing along it.
+ *
+ * The view doubles as the home screen's full-screen background layer:
+ * while disconnected the globe sits small in the map slot at the top;
+ * [setConnected] smoothly zooms it up (centre sinks, radius grows)
+ * until it fills the screen and reaches behind the bottom navigation
+ * bar, and shrinks it back on disconnect.
  */
 class WorldMapView @JvmOverloads constructor(
     context: Context,
@@ -111,6 +117,23 @@ class WorldMapView @JvmOverloads constructor(
     private var projKeyLat = Double.NaN
     private var projKeyLon = Double.NaN
     private var projKeySize = -1
+    private var projKeyCy = -1
+
+    // Background zoom state: 0 = small in the top map slot,
+    // 1 = enlarged full-screen backdrop (connected).
+    private var zoomFraction = 0f
+    private var zoomConnected = false
+    private var zoomAnimator: ValueAnimator? = null
+
+    /** Status-bar inset in px, fed in by the hosting design so the
+     * small globe sits exactly in the (now empty) map slot. */
+    var topInsetPx: Int = 0
+        set(value) {
+            if (field != value) {
+                field = value
+                invalidate()
+            }
+        }
 
     // Marker target (degrees); invalid when latitude is NaN.
     private var markerLat = Double.NaN
@@ -156,7 +179,8 @@ class WorldMapView @JvmOverloads constructor(
 
     private fun ensureProjection(cx: Float, cy: Float, r: Float) {
         val sizeKey = (r * 2).toInt()
-        if (projKeyLat == centerLat && projKeyLon == centerLon && projKeySize == sizeKey) return
+        val cyKey = cy.toInt()
+        if (projKeyLat == centerLat && projKeyLon == centerLon && projKeySize == sizeKey && projKeyCy == cyKey) return
         if (projX.size != landLatLon.size) {
             projX = FloatArray(landLatLon.size)
             projY = FloatArray(landLatLon.size)
@@ -176,6 +200,7 @@ class WorldMapView @JvmOverloads constructor(
         projKeyLat = centerLat
         projKeyLon = centerLon
         projKeySize = sizeKey
+        projKeyCy = cyKey
     }
 
     // Unit vector of a lat/lon point in view space (x right, y up, z toward viewer).
@@ -325,6 +350,28 @@ class WorldMapView @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Zoom the globe up (connected) or back down into the map slot
+     * (disconnected) over ~750 ms. Only the disc's centre and radius
+     * interpolate; the layout around it never moves.
+     */
+    fun setConnected(value: Boolean) {
+        if (value == zoomConnected) return
+        zoomConnected = value
+        val from = zoomFraction
+        val to = if (value) 1f else 0f
+        zoomAnimator?.cancel()
+        zoomAnimator = ValueAnimator.ofFloat(from, to).apply {
+            duration = 750
+            interpolator = DecelerateInterpolator()
+            addUpdateListener {
+                zoomFraction = it.animatedValue as Float
+                invalidate()
+            }
+            start()
+        }
+    }
+
     private fun startPulse() {
         if (pulseAnimator?.isRunning == true) return
         pulseAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
@@ -348,14 +395,24 @@ class WorldMapView @JvmOverloads constructor(
         stopPulse()
         rotateAnimator?.cancel()
         fadeAnimator?.cancel()
+        zoomAnimator?.cancel()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (width == 0 || height == 0) return
+        // Disc geometry: small and centred in the top map slot while
+        // disconnected; enlarged into a full-screen backdrop while
+        // connected (centre sinks, radius grows until the rim reaches
+        // behind the bottom navigation bar). zoomFraction interpolates.
+        val density = resources.displayMetrics.density
+        val smallR = 104f * density
+        val smallCy = topInsetPx + 162f * density
+        val bigR = height * 0.40f
+        val bigCy = height * 0.45f
         val cx = width / 2f
-        val cy = height / 2f
-        val r = minOf(width, height) / 2f * 0.97f
+        val cy = smallCy + (bigCy - smallCy) * zoomFraction
+        val r = smallR + (bigR - smallR) * zoomFraction
 
         // Sphere body + rim
         canvas.drawCircle(cx, cy, r, spherePaint)

@@ -84,12 +84,18 @@ class HubActivity : BaseActivity<HubDesign>() {
                             showingProxy = false
                             hub.showContent(proxy.root, profiles.root, proxy = false)
                         }
-                        HubDesign.Request.OpenHome ->
+                        HubDesign.Request.OpenHome -> {
                             startActivity(MainActivity::class.intent)
-                        HubDesign.Request.OpenStats ->
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
+                        HubDesign.Request.OpenStats -> {
                             startActivity(TrafficStatsActivity::class.intent)
-                        HubDesign.Request.OpenSettings ->
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
+                        HubDesign.Request.OpenSettings -> {
                             startActivity(SettingsActivity::class.intent)
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                        }
                     }
                 }
                 proxy.requests.onReceive {

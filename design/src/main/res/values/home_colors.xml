@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home redesign palette: deep black-green background, translucent deep
+     green glass surfaces, light mint accent, grey-white text. Only the new
+     home UI uses these; the rest of the app theme is untouched. -->
+<resources>
+    <color name="home_background">#FF05130D</color>
+    <color name="home_background_gradient_end">#FF0A2016</color>
+    <color name="home_surface">#B31B2B21</color>
+    <color name="home_surface_inner">#FF24382D</color>
+    <color name="home_surface_stroke">#263CF2D8</color>
+    <color name="home_accent">#FF7CF2C0</color>
+    <color name="home_accent_dim">#FF26503F</color>
+    <color name="home_accent_glow">#407CF2C0</color>
+    <color name="home_map_dot">#FF2E7A57</color>
+    <color name="home_text_primary">#FFF2F7F3</color>
+    <color name="home_text_secondary">#FF9DB8A9</color>
+    <color name="home_on_accent_ink">#FF06231A</color>
+    <color name="home_status_on">#FF3CE88B</color>
+    <color name="home_status_off">#FF5A6E64</color>
+</resources>

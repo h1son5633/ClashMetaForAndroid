@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <data />
 
-    <LinearLayout
+    <com.example.liquidglass.LiquidGlassView
     android:layout_width="match_parent"
-    android:layout_height="76dp"
-    android:background="@drawable/home_nav_bar"
-    android:orientation="horizontal"
-    android:paddingHorizontal="8dp">
+    android:layout_height="86dp"
+    android:paddingHorizontal="8dp"
+    app:adaptiveTint="false"
+    app:bevelWidth="20dp"
+    app:cornerRadius="28dp"
+    app:dispersionStrength="0.10"
+    app:glassMaterial="regular"
+    app:glassTint="#A61B2B21"
+    app:refractionHeight="10dp"
+    app:sensorHighlight="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
 
     <LinearLayout
         android:id="@+id/navHome"
@@ -27,7 +39,7 @@
             android:id="@+id/navHomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="5dp"
             android:text="@string/home_nav_home"
             android:textSize="12sp" />
     </LinearLayout>
@@ -50,7 +62,7 @@
             android:id="@+id/navStatsText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="5dp"
             android:text="@string/home_nav_stats"
             android:textSize="12sp" />
     </LinearLayout>
@@ -73,7 +85,7 @@
             android:id="@+id/navHubText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="5dp"
             android:text="@string/home_nav_hub"
             android:textSize="12sp" />
     </LinearLayout>
@@ -96,9 +108,10 @@
             android:id="@+id/navSettingsText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="5dp"
             android:text="@string/home_nav_settings"
             android:textSize="12sp" />
     </LinearLayout>
-</LinearLayout>
+    </LinearLayout>
+</com.example.liquidglass.LiquidGlassView>
 </layout>

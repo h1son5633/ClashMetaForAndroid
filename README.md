@@ -1,87 +1,29 @@
-## Clash Meta for Android
+# Clash Meta for Android · UI 复刻版
 
-A Graphical user interface of [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) for Android
+这是我个人 fork 的 **UI 复刻版**：基于 [Clash Meta for Android](https://github.com/MetaCubeX/ClashMetaForAndroid)（上游 v2.11.36），把主页界面按自己的想法重新做了一遍，内核和核心功能与上游完全一致，只改外观和布局，自用为主。
 
-### Feature
+## 这个软件是什么
 
-Feature of [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta)
+Clash Meta for Android 是 Android 平台的代理客户端，内核是 mihomo（Clash.Meta）：
 
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="80">](https://f-droid.org/packages/com.github.metacubex.clash.meta/)
+- 支持 Shadowsocks、VMess、VLESS、Trojan、Hysteria 等主流协议
+- 按规则智能分流：国内直连、国外走代理，也可以全局或直连模式
+- 内置 GeoIP / GeoSite 规则数据库，支持订阅导入和节点测速、切换
 
-### Requirement
+## 本复刻版改了什么
 
-- Android 5.0+ (minimum)
-- Android 7.0+ (recommend)
-- `armeabi-v7a` , `arm64-v8a`, `x86` or `x86_64` Architecture
+- **全新主页**：深色薄荷绿玻璃拟态风格，顶部只保留一个猫图标
+- **点阵世界地图**：按节点名称定位到对应国家首都，发光标记显示当前节点位置
+- **横向胶囊控制栏**：替代原来的圆形开关，一键启停
+- **状态 / 节点 / 流量+模式卡片**：连接时长、实时速度、当前节点与延迟一目了然
+- **四个底部导航**：首页 / 统计 / 代理+配置（合并页） / 设置；统计页可看本次连接已用流量
+- 所有数据均为真实读取，不做假数据；包名与官方版本不同，**可与官方版共存安装**
 
-### Build
+## 下载
 
-1. Update submodules
+到 [Releases](https://github.com/h1son5633/ClashMetaForAndroid/releases) 下载最新 APK（arm64-v8a，适用于大多数安卓手机）。
 
-   ```bash
-   git submodule update --init --recursive
-   ```
+## 说明
 
-2. Install **OpenJDK 11**, **Android SDK**, **CMake** and **Golang**
-
-3. Create `local.properties` in project root with
-
-   ```properties
-   sdk.dir=/path/to/android-sdk
-   ```
-
-4. (Optional) Custom app package name. Add the following configuration to `local.properties`.
-
-   ```properties
-   # config your ownn applicationId, or it will be 'com.github.metacubex.clash'
-   custom.application.id=com.my.compile.clash
-   # remove application id suffix, or the applicaion id will be 'com.github.metacubex.clash.alpha'
-   remove.suffix=true
-
-5. Create `signing.properties` in project root with
-
-   ```properties
-   keystore.path=/path/to/keystore/file
-   keystore.password=<key store password>
-   key.alias=<key alias>
-   key.password=<key password>
-   ```
-
-6. Build
-
-   ```bash
-   ./gradlew app:assembleAlphaRelease
-   ```
-
-### Automation
-
-APP package name is `com.github.metacubex.clash.meta`
-
-- Toggle Clash.Meta service status
-  - Send intent to activity `com.github.kr328.clash.ExternalControlActivity` with action `com.github.metacubex.clash.meta.action.TOGGLE_CLASH`
-- Start Clash.Meta service
-  - Send intent to activity `com.github.kr328.clash.ExternalControlActivity` with action `com.github.metacubex.clash.meta.action.START_CLASH`
-- Stop Clash.Meta service
-  - Send intent to activity `com.github.kr328.clash.ExternalControlActivity` with action `com.github.metacubex.clash.meta.action.STOP_CLASH`
-- Import a profile
-  - URL Scheme `clash://install-config?url=<encoded URI>` or `clashmeta://install-config?url=<encoded URI>`
-
-### Contribution and Project Maintenance
-
-#### Meta Kernel
-
-- CMFA uses the kernel from `android-real` branch under `MetaCubeX/Clash.Meta`, which is a merge of the main `Alpha` branch and `android-open`.
-  - If you want to contribute to the kernel, make PRs to `Alpha` branch of the Meta kernel repository.
-  - If you want to contribute Android-specific patches to the kernel, make PRs to  `android-open` branch of the Meta kernel repository.
-
-#### Maintenance
-
-- When `MetaCubeX/Clash.Meta` kernel is updated to a new version, the `Update Dependencies` actions in this repo will be triggered automatically.
-  - It will pull the new version of the meta kernel, update all the golang dependencies, and create a PR without manual intervention.
-  - If there is any compile error in PR, you need to fix it before merging. Alternatively, you may merge the PR directly.
-- Manually triggering `Build Pre-Release` actions will compile and publish a `PreRelease` version.
-- Manually triggering `Build Release` actions will compile, tag and publish a `Release` version.
-  - You must fill the blank `Release Tag` with the tag you want to release in the format of `v1.2.3`.
-  - `versionName` and `versionCode` in `build.gradle.kts` will be automatically bumped to the tag you filled above.
+- 本仓库是个人学习与自用 fork，遵循上游的 GPL-3.0 许可证
+- 上游项目：https://github.com/MetaCubeX/ClashMetaForAndroid ，内核：https://github.com/MetaCubeX/mihomo

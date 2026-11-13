@@ -5,7 +5,7 @@
 
     <com.example.liquidglass.LiquidGlassView
     android:layout_width="match_parent"
-    android:layout_height="86dp"
+    android:layout_height="98dp"
     android:paddingHorizontal="8dp"
     app:adaptiveTint="false"
     app:bevelWidth="20dp"
@@ -15,6 +15,18 @@
     app:glassTint="#A61B2B21"
     app:refractionHeight="10dp"
     app:sensorHighlight="false">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/navPill"
+        android:layout_width="0dp"
+        android:layout_height="68dp"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/home_nav_pill"
+        android:visibility="invisible" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -39,7 +51,7 @@
             android:id="@+id/navHomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="6dp"
             android:text="@string/home_nav_home"
             android:textSize="12sp" />
     </LinearLayout>
@@ -62,7 +74,7 @@
             android:id="@+id/navStatsText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="6dp"
             android:text="@string/home_nav_stats"
             android:textSize="12sp" />
     </LinearLayout>
@@ -85,7 +97,7 @@
             android:id="@+id/navHubText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="6dp"
             android:text="@string/home_nav_hub"
             android:textSize="12sp" />
     </LinearLayout>
@@ -108,10 +120,11 @@
             android:id="@+id/navSettingsText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="6dp"
             android:text="@string/home_nav_settings"
             android:textSize="12sp" />
     </LinearLayout>
     </LinearLayout>
+    </FrameLayout>
 </com.example.liquidglass.LiquidGlassView>
 </layout>

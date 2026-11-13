@@ -5,7 +5,7 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.github.kr328.clash.design.databinding.DesignStatsBinding
-import com.github.kr328.clash.design.util.HomeNavPill
+import com.github.kr328.clash.design.util.HomeNavStyle
 import com.github.kr328.clash.design.util.layoutInflater
 import com.github.kr328.clash.design.util.root
 import kotlinx.coroutines.Dispatchers
@@ -84,8 +84,7 @@ class TrafficStatsDesign(context: Context) : Design<TrafficStatsDesign.Request>(
         binding.self = this
 
         val nav = binding.navBar
-        (nav.root as? com.example.liquidglass.LiquidGlassView)?.enableDynamicBackground = true
-        HomeNavPill.attach(nav, 1)
+        HomeNavStyle.attach(nav, 1)
         nav.navHomeIcon.setColorFilter(color(R.color.home_text_secondary))
         nav.navHomeText.setTextColor(color(R.color.home_text_secondary))
         nav.navStatsIcon.setColorFilter(color(R.color.home_accent))

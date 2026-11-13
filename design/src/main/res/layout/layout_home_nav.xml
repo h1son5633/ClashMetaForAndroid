@@ -1,130 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
     <data />
 
-    <com.example.liquidglass.LiquidGlassView
-    android:layout_width="match_parent"
-    android:layout_height="98dp"
-    android:paddingHorizontal="8dp"
-    app:adaptiveTint="false"
-    app:bevelWidth="20dp"
-    app:cornerRadius="28dp"
-    app:dispersionStrength="0.10"
-    app:glassMaterial="regular"
-    app:glassTint="#A61B2B21"
-    app:refractionHeight="10dp"
-    app:sensorHighlight="false">
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    <View
-        android:id="@+id/navPill"
-        android:layout_width="0dp"
-        android:layout_height="68dp"
-        android:layout_gravity="center_vertical"
-        android:background="@drawable/home_nav_pill"
-        android:visibility="invisible" />
-
+    <!-- VideoX-style floating bottom navigation: no shared board, each
+         tab is its own small capsule button (52dp tall, icon + label side
+         by side, 10dp gaps). No glass, no press/ripple effect — tapping
+         only fires haptic feedback. The current page's capsule is the
+         accent-tinted one; backgrounds are swapped in HomeNavStyle and
+         icon/label colours are set per page in the *Design classes. -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="52dp"
         android:orientation="horizontal">
 
-    <LinearLayout
-        android:id="@+id/navHome"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical">
+        <LinearLayout
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/home_nav_btn_normal"
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/navHomeIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_home_house" />
+            <ImageView
+                android:id="@+id/navHomeIcon"
+                android:layout_width="19dp"
+                android:layout_height="19dp"
+                android:src="@drawable/ic_home_house" />
 
-        <TextView
-            android:id="@+id/navHomeText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/home_nav_home"
-            android:textSize="12sp" />
+            <TextView
+                android:id="@+id/navHomeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/home_nav_home"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navStats"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/home_nav_btn_normal"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/navStatsIcon"
+                android:layout_width="19dp"
+                android:layout_height="19dp"
+                android:src="@drawable/ic_home_stats" />
+
+            <TextView
+                android:id="@+id/navStatsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/home_nav_stats"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navHub"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/home_nav_btn_normal"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/navHubIcon"
+                android:layout_width="19dp"
+                android:layout_height="19dp"
+                android:src="@drawable/ic_baseline_apps" />
+
+            <TextView
+                android:id="@+id/navHubText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/home_nav_hub"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navSettings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/home_nav_btn_normal"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/navSettingsIcon"
+                android:layout_width="19dp"
+                android:layout_height="19dp"
+                android:src="@drawable/ic_baseline_settings" />
+
+            <TextView
+                android:id="@+id/navSettingsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/home_nav_settings"
+                android:textSize="15sp" />
+        </LinearLayout>
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/navStats"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical">
-
-        <ImageView
-            android:id="@+id/navStatsIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_home_stats" />
-
-        <TextView
-            android:id="@+id/navStatsText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/home_nav_stats"
-            android:textSize="12sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/navHub"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical">
-
-        <ImageView
-            android:id="@+id/navHubIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_baseline_apps" />
-
-        <TextView
-            android:id="@+id/navHubText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/home_nav_hub"
-            android:textSize="12sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/navSettings"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical">
-
-        <ImageView
-            android:id="@+id/navSettingsIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_baseline_settings" />
-
-        <TextView
-            android:id="@+id/navSettingsText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/home_nav_settings"
-            android:textSize="12sp" />
-    </LinearLayout>
-    </LinearLayout>
-    </FrameLayout>
-</com.example.liquidglass.LiquidGlassView>
 </layout>

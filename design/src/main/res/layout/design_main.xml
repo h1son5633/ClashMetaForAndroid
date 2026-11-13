@@ -32,7 +32,7 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="20dp"
                 android:paddingTop="@{self.surface.insets.top}"
-                android:paddingBottom="134dp">
+                android:paddingBottom="92dp">
 
                 <!-- Top bar: cat mark only on the left, import + settings on the right -->
                 <LinearLayout

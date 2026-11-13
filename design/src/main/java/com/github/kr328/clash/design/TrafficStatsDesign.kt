@@ -5,6 +5,7 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.github.kr328.clash.design.databinding.DesignStatsBinding
+import com.github.kr328.clash.design.util.HomeNavPill
 import com.github.kr328.clash.design.util.layoutInflater
 import com.github.kr328.clash.design.util.root
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,20 @@ class TrafficStatsDesign(context: Context) : Design<TrafficStatsDesign.Request>(
         }
     }
 
+    suspend fun setHistory(
+        todayUpload: String,
+        todayDownload: String,
+        todayTotal: String,
+        days: List<com.github.kr328.clash.design.store.TrafficHistory.DayTraffic>,
+    ) {
+        withContext(Dispatchers.Main) {
+            binding.todayUploadText.text = todayUpload
+            binding.todayDownloadText.text = todayDownload
+            binding.todayTotalText.text = todayTotal
+            binding.dailyBars.setData(days.map { it.total }, days.map { it.label })
+        }
+    }
+
     suspend fun setDuration(text: String) {
         withContext(Dispatchers.Main) {
             binding.durationText.text = text
@@ -70,6 +85,7 @@ class TrafficStatsDesign(context: Context) : Design<TrafficStatsDesign.Request>(
 
         val nav = binding.navBar
         (nav.root as? com.example.liquidglass.LiquidGlassView)?.enableDynamicBackground = true
+        HomeNavPill.attach(nav, 1)
         nav.navHomeIcon.setColorFilter(color(R.color.home_text_secondary))
         nav.navHomeText.setTextColor(color(R.color.home_text_secondary))
         nav.navStatsIcon.setColorFilter(color(R.color.home_accent))
@@ -88,6 +104,9 @@ class TrafficStatsDesign(context: Context) : Design<TrafficStatsDesign.Request>(
         binding.uploadText.text = "0 B/s"
         binding.downloadText.text = "0 B/s"
         binding.durationText.text = "00:00:00"
+        binding.todayUploadText.text = "0 Bytes"
+        binding.todayDownloadText.text = "0 Bytes"
+        binding.todayTotalText.text = "0 Bytes"
     }
 
     fun request(request: Request) {

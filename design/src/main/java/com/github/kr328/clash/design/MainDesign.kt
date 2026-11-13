@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import com.github.kr328.clash.core.model.TunnelState
 import com.github.kr328.clash.design.databinding.DesignAboutBinding
 import com.github.kr328.clash.design.databinding.DesignMainBinding
+import com.github.kr328.clash.design.util.HomeNavPill
 import com.github.kr328.clash.design.util.NodeCountry
 import com.github.kr328.clash.design.util.layoutInflater
 import com.github.kr328.clash.design.util.root
@@ -162,6 +163,7 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
         // Liquid Glass bar: the backdrop (globe / scrolled content) moves,
         // so the glass must keep re-sampling it.
         (nav.root as? com.example.liquidglass.LiquidGlassView)?.enableDynamicBackground = true
+        HomeNavPill.attach(nav, 0)
         nav.navHomeIcon.setColorFilter(color(R.color.home_accent))
         nav.navHomeText.setTextColor(color(R.color.home_accent))
         nav.navStatsIcon.setColorFilter(color(R.color.home_text_secondary))

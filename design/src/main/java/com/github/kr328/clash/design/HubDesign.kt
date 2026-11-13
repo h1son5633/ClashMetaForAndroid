@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import com.github.kr328.clash.design.databinding.DesignHubBinding
+import com.github.kr328.clash.design.util.HomeNavPill
 import com.github.kr328.clash.design.util.layoutInflater
 import com.github.kr328.clash.design.util.root
 
@@ -73,6 +74,7 @@ class HubDesign(context: Context) : Design<HubDesign.Request>(context) {
         // Bottom navigation: Hub is the current page.
         val nav = binding.navBar
         (nav.root as? com.example.liquidglass.LiquidGlassView)?.enableDynamicBackground = true
+        HomeNavPill.attach(nav, 2)
         nav.navHomeIcon.setColorFilter(color(R.color.home_text_secondary))
         nav.navHomeText.setTextColor(color(R.color.home_text_secondary))
         nav.navStatsIcon.setColorFilter(color(R.color.home_text_secondary))

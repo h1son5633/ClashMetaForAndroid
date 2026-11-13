@@ -20,6 +20,7 @@ import com.github.kr328.clash.core.model.ProxySort
 import com.github.kr328.clash.core.util.trafficDownload
 import com.github.kr328.clash.core.util.trafficUpload
 import com.github.kr328.clash.design.MainDesign
+import com.github.kr328.clash.design.store.TrafficHistory
 import com.github.kr328.clash.design.ui.ToastDuration
 import com.github.kr328.clash.design.util.NodeGeo
 import com.github.kr328.clash.util.startClashService
@@ -197,6 +198,8 @@ class MainActivity : BaseActivity<MainDesign>() {
         }
         lastTrafficTotal = total
         lastTrafficAt = nowMs
+
+        TrafficHistory.record(this@MainActivity, upBytes, downBytes)
 
         setSpeeds(formatBytesPerSec(upRate), formatBytesPerSec(downRate))
         pushTrafficSample(upRate, downRate)

@@ -6,6 +6,7 @@ import com.github.kr328.clash.core.util.trafficDownload
 import com.github.kr328.clash.core.util.trafficTotal
 import com.github.kr328.clash.core.util.trafficUpload
 import com.github.kr328.clash.design.TrafficStatsDesign
+import com.github.kr328.clash.design.store.TrafficHistory
 import com.github.kr328.clash.util.withClash
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.selects.select
@@ -75,6 +76,7 @@ class TrafficStatsActivity : BaseActivity<TrafficStatsDesign>() {
             setTotals("0 Bytes", "0 Bytes", "0 Bytes")
             clearLive()
             setDuration("00:00:00")
+            pushHistory()
             return
         }
 
@@ -92,6 +94,8 @@ class TrafficStatsActivity : BaseActivity<TrafficStatsDesign>() {
         val upBytes = unpackTraffic(total ushr 32)
         val downBytes = unpackTraffic(total and 0xFFFFFFFFL)
 
+        TrafficHistory.record(this@TrafficStatsActivity, upBytes, downBytes)
+
         var upRate = 0L
         var downRate = 0L
         val last = lastTotal
@@ -104,12 +108,37 @@ class TrafficStatsActivity : BaseActivity<TrafficStatsDesign>() {
         }
         lastTotal = total to nowMs
 
+        pushHistory()
+
         setSpeeds(formatBytesPerSec(upRate), formatBytesPerSec(downRate))
         pushTrafficSample(upRate, downRate)
 
         val startedAt = uiStore.clashStartedAt
         if (startedAt > 0L) {
             setDuration(formatDuration(System.currentTimeMillis() - startedAt))
+        }
+    }
+
+    private suspend fun TrafficStatsDesign.pushHistory() {
+        val ctx = this@TrafficStatsActivity
+        val today = TrafficHistory.today(ctx)
+        setHistory(
+            formatBytes(today.upload),
+            formatBytes(today.download),
+            formatBytes(today.total),
+            TrafficHistory.lastDays(ctx, 7),
+        )
+    }
+
+    private fun formatBytes(bytes: Long): String {
+        return when {
+            bytes >= 1024L * 1024L * 1024L ->
+                String.format("%.2f GiB", bytes / 1024.0 / 1024.0 / 1024.0)
+            bytes >= 1024L * 1024L ->
+                String.format("%.1f MiB", bytes / 1024.0 / 1024.0)
+            bytes >= 1024L ->
+                String.format("%.1f KiB", bytes / 1024.0)
+            else -> "$bytes Bytes"
         }
     }
 

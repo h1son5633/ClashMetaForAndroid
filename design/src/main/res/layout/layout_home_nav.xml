@@ -3,14 +3,15 @@
     <data />
 
     <!-- VideoX-style floating bottom navigation: no shared board, each
-         tab is its own small capsule button (66dp tall, icon + label side
+         tab is its own capsule button (52dp tall — the same height as the
+         home menu rows — icon + label side
          by side, 10dp gaps). No glass, no press/ripple effect — tapping
          only fires haptic feedback. The current page's capsule is the
          accent-tinted one; backgrounds are swapped in HomeNavStyle and
          icon/label colours are set per page in the *Design classes. -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="66dp"
+        android:layout_height="52dp"
         android:orientation="horizontal">
 
         <LinearLayout

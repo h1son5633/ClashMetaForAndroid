@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unselected nav capsule (VideoX floating style): near-solid surface
+     colour (home surface #1B2B21 at 95%), no border. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="26dp" />
+    <solid android:color="#F21B2B21" />
+</shape>

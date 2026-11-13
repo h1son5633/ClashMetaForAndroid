@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selected nav capsule (VideoX floating style): accent at 30% with a
+     1dp accent border at 45%. Radius 26dp = full capsule at 52dp tall. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="26dp" />
+    <solid android:color="#4D7CF2C0" />
+    <stroke
+        android:width="1dp"
+        android:color="#737CF2C0" />
+</shape>

@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- v9: power section of the merged mode bar (running state). End-cap
-     shape: square left corners sit flush against the Direct segment,
-     right corners fully rounded to follow the bar's pill outline. -->
+<!-- v9.1: power button is a round button like the "fastest node" button
+     (user reversed the v9 merged end-cap after seeing it rendered).
+     Running state: blue circle. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <corners
-        android:bottomLeftRadius="0dp"
-        android:bottomRightRadius="999dp"
-        android:topLeftRadius="0dp"
-        android:topRightRadius="999dp" />
+    android:shape="oval">
     <solid android:color="#FF2E7CF6" />
 </shape>

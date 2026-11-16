@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Clash 小部件</string>
+    <string name="widget_description">当前节点、实时速率、模式切换与隧道开关</string>
+    <string name="widget_connected">已连接 · %1$s</string>
+    <string name="widget_not_connected">未连接</string>
+    <string name="widget_mode_rule">规则</string>
+    <string name="widget_mode_global">全局</string>
+    <string name="widget_mode_direct">直连</string>
+    <string name="widget_refresh">刷新</string>
+    <string name="widget_fastest">最快节点</string>
+    <string name="widget_toggle">开关隧道</string>
+</resources>

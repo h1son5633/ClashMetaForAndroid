@@ -239,5 +239,27 @@
                 <data android:scheme="android_secret_code" android:host="252746382" />
             </intent-filter>
         </receiver>
+
+        <!-- v9 home-screen widget. The CLASH_STARTED / CLASH_STOPPED actions
+             below are Intents.ACTION_CLASH_STARTED / ACTION_CLASH_STOPPED,
+             whose runtime values embed the applicationId
+             (com.github.h1son5633.clash by default in the root build script).
+             If customApplicationId changes, these two literals must change
+             with it; the widget still works without them (onUpdate, taps
+             and its own polling keep it fresh), they only make start/stop
+             transitions show up immediately. -->
+        <receiver
+            android:name=".ClashWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.github.h1son5633.clash.intent.action.CLASH_STARTED" />
+                <action android:name="com.github.h1son5633.clash.intent.action.CLASH_STOPPED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_clash_info" />
+        </receiver>
     </application>
 </manifest>

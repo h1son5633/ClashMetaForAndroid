@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- v9 home-screen widget: white card mirroring the iOS Clash widget.
-     Changes vs v8: the power control is the right-end section of the mode
-     bar itself (one continuous bar, no separate circle), and a round
-     "fastest node" button sits at the top-right corner.
+<!-- v9.1 home-screen widget: white card mirroring the iOS Clash widget.
+     Changes vs v9: (1) the power control is a separate ROUND button again,
+     styled like the top-right "fastest node" button (user reversed the v9
+     merged end-cap design after seeing it rendered); (2) the mode bar has a
+     fixed height and its segment labels are match_parent + singleLine —
+     the v9 wrap_content + vertical-padding labels rendered clipped in half
+     on the user's launcher.
      RemoteViews-safe views only (LinearLayout / TextView / ImageView). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -74,58 +77,63 @@
         android:textColor="#FF8A8A8E"
         android:textSize="11sp" />
 
-    <!-- One continuous bar: the segment track spans the full width and the
-         power control is its right-end section, flush against the Direct
-         segment (same height, no gap, no separate circle). -->
+    <!-- Bottom row: mode segment bar (fixed height, labels fill it) plus the
+         round power button as its own element on the right. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@drawable/widget_bg_segment_track"
         android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="2dp">
+        android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/widget_mode_rule"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="42dp"
             android:layout_weight="1"
-            android:gravity="center"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:text="@string/widget_mode_rule"
-            android:textSize="13sp" />
+            android:background="@drawable/widget_bg_segment_track"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="2dp">
 
-        <TextView
-            android:id="@+id/widget_mode_global"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:text="@string/widget_mode_global"
-            android:textSize="13sp" />
+            <TextView
+                android:id="@+id/widget_mode_rule"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/widget_mode_rule"
+                android:textSize="13sp" />
 
-        <TextView
-            android:id="@+id/widget_mode_direct"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:text="@string/widget_mode_direct"
-            android:textSize="13sp" />
+            <TextView
+                android:id="@+id/widget_mode_global"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/widget_mode_global"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/widget_mode_direct"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/widget_mode_direct"
+                android:textSize="13sp" />
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/widget_power"
-            android:layout_width="58dp"
-            android:layout_height="match_parent"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginStart="8dp"
             android:background="@drawable/widget_bg_power_off"
             android:contentDescription="@string/widget_toggle"
-            android:padding="8dp"
+            android:padding="11dp"
             android:src="@drawable/ic_home_power" />
     </LinearLayout>
 </LinearLayout>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Clash Widget</string>
+    <string name="widget_description">Current node, live traffic rates, mode switch and tunnel toggle</string>
+    <string name="widget_connected">Connected · %1$s</string>
+    <string name="widget_not_connected">Not connected</string>
+    <string name="widget_mode_rule">Rule</string>
+    <string name="widget_mode_global">Global</string>
+    <string name="widget_mode_direct">Direct</string>
+    <string name="widget_refresh">Refresh</string>
+    <string name="widget_toggle">Toggle tunnel</string>
+</resources>
